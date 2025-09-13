@@ -1,16 +1,38 @@
 // constants
-const eatingMessages = [
-  "Yum! Thanks for the treat! 🐾",
-  "Delicious! More please 🍩",
-  "That hit the spot 😋",
-  "Woof! Best snack ever 🐶",
-  "Mmm… energy for more coding! 💻",
-  "Crunch crunch… so tasty! 🍪",
-  "Thanks, buddy! You’re the best 🐾",
-  "Nom nom nom… yummy! 🍣",
-  "Yay! I feel stronger already 💪",
-  "Slurp! That was paw-some 🐕"
-];
+let messageDisplay = "";  // global
+
+const foodMessages = {
+  "🍋": [
+    "Eww… a lemon? 🍋 Try again, I want something sweeter!",
+    "Not my favorite… let’s code more for better snacks 😅",
+    "Woof… too sour! 🐶 Bring me a cookie next time 🍪",
+    "Sour power? Hmm… let’s aim for something tastier 🍎"
+  ],
+  "🍎": [
+    "Yum! An apple a day keeps the bugs away 🍎",
+    "Fresh and sweet! Thanks, buddy 🐾",
+    "Mmm… crisp coding energy 😋",
+    "Great start! Keep feeding me those apples 🍏"
+  ],
+  "🍔": [
+    "Woof! A burger boost for my coding brain 🍔",
+    "Juicy and delicious — I can solve anything now 🐶",
+    "That hit the spot! Let’s tackle the next challenge 💪",
+    "Mmm… coding with extra flavor 😋"
+  ],
+  "🥘": [
+    "Wow… a whole meal! You crushed that hard problem 🥘",
+    "That was a feast — you’re unstoppable 🏆",
+    "I’m stuffed with victory! 🐾",
+    "Hard problem, hearty meal. Well done chef-coder 👨‍🍳"
+  ],
+  "🍾": [
+    "POP! A surprise treat 🍾 — cheers to your success!",
+    "Woof woof! You unlocked a special snack 🎉",
+    "Surprise feast! Coding party time 🐶",
+    "Legendary drop! You deserve this celebration 🏅"
+  ]
+};
 
 // --- tiny toast ---
 function showToast(msg = "Woof accepted! Keep coding! 🐕") {
@@ -754,51 +776,55 @@ function spawnClickableTreats(treats) {
   const dogCenterX = dogRect.left - popupRect.left + dogRect.width / 2;
   const dogCenterY = dogRect.top - popupRect.top + dogRect.height / 2;
 
-  // Hardcoded positions around the dog (relative offsets)
+  // Hardcoded positions around the dog
   const positions = [
-    { x: -80, y: -60 },  // Top left
-    { x: 80, y: -60 },   // Top right
-    { x: -100, y: 0 },   // Left
-    { x: 100, y: 0 },    // Right
-    { x: -80, y: 60 },   // Bottom left
-    { x: 80, y: 60 },    // Bottom right
-    { x: 0, y: -80 },    // Top center
-    { x: 0, y: 80 }      // Bottom center
+    { x: -80, y: -60 }, { x: 80, y: -60 },
+    { x: -100, y: 0 },  { x: 100, y: 0 },
+    { x: -80, y: 60 },  { x: 80, y: 60 },
+    { x: 0, y: -80 },   { x: 0, y: 80 }
   ];
 
   // For each treat, place 3 instances
   treats.forEach((emoji) => {
+    // pick and store a random message for this emoji
+    if (foodMessages[emoji]) {
+      const msgs = foodMessages[emoji];
+      messageDisplay = msgs[Math.floor(Math.random() * msgs.length)];
+    }
+
     for (let i = 0; i < 3; i++) {
-      const pos = positions[(Math.floor(Math.random() * positions.length))]; // pick random spot
-      
+      const pos = positions[(Math.floor(Math.random() * positions.length))];
       const span = document.createElement("span");
       span.textContent = emoji;
       span.className = "food-emoji";
 
-      const x = dogCenterX + pos.x + (Math.random() * 20 - 10); // jitter so they don’t overlap
+      const x = dogCenterX + pos.x + (Math.random() * 20 - 10);
       const y = dogCenterY + pos.y + (Math.random() * 20 - 10);
 
-      span.style.position = "absolute";
-      span.style.left = `${x - 16}px`;
-      span.style.top = `${y - 16}px`;
-      span.style.fontSize = "24px";
-      span.style.cursor = "pointer";
-      span.style.zIndex = "1000002";
+      Object.assign(span.style, {
+        position: "absolute",
+        left: `${x - 16}px`,
+        top: `${y - 16}px`,
+        fontSize: "36px",
+        cursor: "pointer",
+        zIndex: 1000002
+      });
 
       span.addEventListener("click", () => {
         span.remove();
         dogImg.src = chrome.runtime.getURL("icons/eat.gif");
+
         const chatMsg = document.querySelector("#codebloom-celebration-popup .chat-message");
         if (chatMsg) {
-          const msg = eatingMessages[Math.floor(Math.random() * eatingMessages.length)];
-          chatMsg.textContent = msg;
+          chatMsg.textContent = messageDisplay; // use the stored message
         }
+
         setTimeout(() => {
           dogImg.src = chrome.runtime.getURL("icons/sitdog.png");
         }, 5000);
       });
 
-      footer.appendChild(span); // append to footer (dog container)
+      footer.appendChild(span);
     }
   });
 }
