@@ -14,3 +14,24 @@
 #codebloom-confetti {
   position: fixed; inset: 0; pointer-events: none; z-index: 999998;
 }
+
+
+
+#codebloom-sideicon {
+  position: fixed;
+  left: 98%;    /* start position */
+  top: 30%;
+  width: 108px;
+  height: 108px;
+  z-index: 999999;
+  cursor: grab;
+  transition: transform 0.2s ease;
+}
+
+#codebloom-sideicon:active {
+  cursor: grabbing;
+}
+
+#codebloom-sideicon.dragging {
+  transform: scale(1.05);
+}

@@ -3,13 +3,19 @@
   "name": "CodeBloom",
   "version": "1.0.0",
   "description": "Celebrate Accepted submissions on LeetCode with a positive popup and confetti.",
-  "icons": { "128": "icons/icon128.png" },
+  "icons": { "128": "icons/dog.png" },
   "content_scripts": [
     {
       "matches": ["https://leetcode.com/*", "https://*.leetcode.com/*"],
       "js": ["content.js"],
       "css": ["styles.css"],
       "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/dog.png"],
+      "matches": ["https://leetcode.com/*", "https://*.leetcode.com/*"]
     }
   ],
   "permissions": []
