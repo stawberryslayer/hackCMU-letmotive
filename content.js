@@ -56,9 +56,10 @@ function showToast(msg = "Woof accepted! Keep coding! 🐕") {
     toast.id = "codebloom-toast";
     document.body.appendChild(toast);
   }
-  toast.textContent = msg;
+  // Allow multi-line with \n
+  toast.innerHTML = msg.replace(/\n/g, "<br>");
   toast.classList.add("show");
-  setTimeout(() => toast.classList.remove("show"), 2600);
+  setTimeout(() => toast.classList.remove("show"), 3000);
 }
 
 // --- micro confetti (canvas) ---
@@ -590,10 +591,6 @@ function setupIconBehavior(icon) {
       createGifElement(icon);
     }, 100);
     icon._hoverTimeout = hoverTimeout;
-    const happy = isHappy();
-    const pool = happy ? happyPuppyMessages : sadPuppyMessages;
-    const msg = pool[Math.floor(Math.random() * pool.length)];
-    showToast(msg);
     bounceIcon();
   };
 
@@ -809,14 +806,14 @@ function createImageElement() {
 }
 
 function handleIconClick(e) {
-  // const diffEl = document.querySelector("div[class*='text-difficulty']");
-  // const difficulty = diffEl ? diffEl.textContent.trim() : "Unknown";
-  // const score = getTotalScore();
-  // showToast(`Difficulty: ${difficulty}, Score: ${score}`);
+  const diffEl = document.querySelector("div[class*='text-difficulty']");
+  const difficulty = diffEl ? diffEl.textContent.trim() : "Unknown";
+  const score = getTotalScore();
   const is_happy = isHappy();
   const pool = is_happy ? happyPuppyMessages : sadPuppyMessages;
   const msg = pool[Math.floor(Math.random() * pool.length)];
-  showToast(msg);
+
+  showToast(`${msg}\nDifficulty: ${difficulty}, Current Score: ${score}`);
   bounceIcon();
 }
 
