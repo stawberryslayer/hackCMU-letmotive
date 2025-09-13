@@ -47,7 +47,7 @@ Project for HackCMU 2025
 
 ## Files Description
 
-content.js
+content.js： 
     Detects accepted submissions on LeetCode.
     Triggers celebrations (temoji snacks, popup).
     Injects floating dog icon with drag-and-drop support.
@@ -56,13 +56,13 @@ content.js
         each problem’s difficulty adds different points;
         dog is happy if score > 10, otherwise sad.
 
-manifest.json
+manifest.json： 
     Defines the extension: name (myPlugin), version (1.0.0), description.
     Content scripts: inject JS/CSS into LeetCode.
     Web resources: icons and celebration popup.
     Permissions: minimal for functionality.
 
-styles.css
+styles.css： 
     Toasts: elegant success messages.
     Confetti: canvas-based animations.
     Draggable pet icon: user can move.
