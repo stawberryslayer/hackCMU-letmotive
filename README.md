@@ -49,11 +49,6 @@ Project for HackCMU 2025
 
 ## Features
 
-- Difficulty Detection: Reads elements like div[class*="text-difficulty"] to extract difficulty level.
-- Score Display: Parses page text to show scores in a popup or toast message.
-- Interactive Icon: Clicking the extension icon triggers animations (bounceIcon) and shows context-based information.
-- Popup Support: The extension includes a popup for quick user interactions.
-
 1. Celebrations on Accepted Submissions
 
     The dropped "snacks" (emoji snacks) randomly drop according to the difficulty level (easy/medium/hard).
@@ -68,8 +63,8 @@ Project for HackCMU 2025
 
 3. Floating Dog Icon
 
-    Draggable companion that stays on screen.
-    Click to view problem difficulty and your progress score.
+    Draggable companion that stays on screen/
+    Clicking the extension icon triggers animations, also displays problem difficulty and your progress score.
     Hover animations to display Scotty’s mood:
         If your score is high / improving, Scotty shows a happily.
         If your score has dropped due to inactivity, Scotty shows sadly.
