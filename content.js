@@ -277,78 +277,33 @@ function detectDifficulty() {
 
 // --- score tracking system ---
 const SCORE_STORAGE_KEY = 'codebloom-total-score';
-const SCORE_TIMESTAMP_KEY = 'codebloom-score-timestamp';
-const SCORE_DECAY_RATE = 0.25; // points per hour
-const HOUR_IN_MS = 60 * 60 * 1000; // milliseconds in an hour
 
 function isHappy() {
   const score = getTotalScore();
   return score >= 10;
 }
 
-function calculateScoreDecay() {
-  const lastTimestamp = localStorage.getItem(SCORE_TIMESTAMP_KEY);
-  if (!lastTimestamp) return 0;
-  
-  const now = Date.now();
-  const lastTime = parseInt(lastTimestamp, 10);
-  
-  // Convert to seconds for easier calculation
-  const nowSeconds = Math.floor(now / 1000);
-  const lastSeconds = Math.floor(lastTime / 1000);
-  
-  // Calculate how many 3600-second intervals have passed
-  const intervalsElapsed = Math.floor((nowSeconds - lastSeconds) / 3600);
-  
-  // Each interval represents 0.25 points of decay
-  const decay = intervalsElapsed * SCORE_DECAY_RATE;
-  return Math.max(0, decay); // Don't allow negative decay
-}
-
-
-function getRawScore() {
-  const savedScore = localStorage.getItem(SCORE_STORAGE_KEY);
-  return savedScore ? parseFloat(savedScore) : 0;
-}
-
 function getTotalScore() {
-  // Always calculate decay on-the-fly, never modify stored raw score
-  const rawScore = getRawScore();
-  const decay = calculateScoreDecay();
-  const finalScore = Math.max(-5, rawScore - decay);
-  return finalScore;
+  const savedScore = localStorage.getItem(SCORE_STORAGE_KEY);
+  return savedScore ? parseInt(savedScore, 10) : 0;
 }
 
 function addToScore(points) {
-  // Get current score with decay applied
   const currentScore = getTotalScore();
-  // Add points to get new score
   const newScore = currentScore + points;
-  // Store the new raw score (without decay)
   localStorage.setItem(SCORE_STORAGE_KEY, newScore.toString());
-  // Update timestamp to current time
-  localStorage.setItem(SCORE_TIMESTAMP_KEY, Date.now().toString());
   return newScore;
 }
 
 function resetScore() {
   localStorage.removeItem(SCORE_STORAGE_KEY);
-  localStorage.removeItem(SCORE_TIMESTAMP_KEY);
   return 0;
 }
 
 // Debug function to log current score (can be called from console)
 function logCurrentScore() {
   const score = getTotalScore();
-  const lastTimestamp = localStorage.getItem(SCORE_TIMESTAMP_KEY);
-  const now = Date.now();
-  const lastTime = lastTimestamp ? parseInt(lastTimestamp, 10) : now;
-  const secondsElapsed = Math.floor((now - lastTime) / 1000);
-  const intervalsElapsed = Math.floor(secondsElapsed / 3600);
   console.log(`Current total score: ${score}`);
-  console.log(`Seconds elapsed since last update: ${secondsElapsed}`);
-  console.log(`one-hour intervals elapsed: ${intervalsElapsed}`);
-  console.log(`Decay that would be applied: ${calculateScoreDecay().toFixed(2)}`);
   return score;
 }
 
@@ -657,9 +612,11 @@ function createGifElement(icon) {
 
   const gif = document.createElement("img");
   gif.id = "codebloom-sideicon-gif";
-  if (is_happy) {
+  if (getTotalScore() > 10) {
+    gif.src = chrome.runtime.getURL("icons/drunk.gif");
+  } else if (is_happy) {
     gif.src = chrome.runtime.getURL("icons/happydog.gif");
-  } else {
+  }  else {
     gif.src = chrome.runtime.getURL("icons/saddog.gif");
   }
 
@@ -854,13 +811,11 @@ function handleIconClick(e) {
   const diffEl = document.querySelector("div[class*='text-difficulty']");
   const difficulty = diffEl ? diffEl.textContent.trim() : "Unknown";
   const score = getTotalScore();
-  const decay = calculateScoreDecay();
-  const raw_score = getRawScore()
   const is_happy = isHappy();
   const pool = is_happy ? happyPuppyMessages : sadPuppyMessages;
   const msg = pool[Math.floor(Math.random() * pool.length)];
 
-  showToast(`${msg}\nDifficulty: ${difficulty}, Current Score: ${score}, Raw Score: ${raw_score}, Decay: ${decay}`);
+  showToast(`${msg}\nDifficulty: ${difficulty}, Current Score: ${score}`);
   bounceIcon();
 }
 

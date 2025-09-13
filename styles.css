@@ -198,3 +198,11 @@
 .food-emoji:hover {
   transform: scale(1.3);
 }
+
+#codebloom-sideicon-gif {
+  transition: transform 0.2s ease;
+}
+
+#codebloom-sideicon-gif:hover {
+  transform: scale(2);
+}
