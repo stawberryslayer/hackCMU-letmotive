@@ -899,10 +899,9 @@ function spawnClickableTreats(treats) {
   });
 }
 
-// --- clear all data on extension reload ---
 function clearAllData() {
-  localStorage.removeItem(SCORE_STORAGE_KEY);
-  localStorage.removeItem(SCORE_TIMESTAMP_KEY);
+  // localStorage.removeItem(SCORE_STORAGE_KEY);
+  // localStorage.removeItem(SCORE_TIMESTAMP_KEY);
   localStorage.removeItem('codebloom-pet-name');
   localStorage.removeItem('codebloom-icon-position');
   console.log('All extension data cleared on reload');
@@ -911,12 +910,12 @@ function clearAllData() {
 // --- kick off ---
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {
-    clearAllData(); // Clear data on every reload
+    clearAllData();
     startDomWatcher();
     injectSideIcon();
   });
 } else {
-  clearAllData(); // Clear data on every reload
+  clearAllData();
   startDomWatcher();
   injectSideIcon();
 }
