@@ -36,7 +36,7 @@ const foodMessages = {
 
 const happyPuppyMessages = [
   "Yay! More coding fun together 🎉",
-  "Best buddy ever! Thanks for the click 💕",
+  "Best buddy ever! 💕",
   "Feeling loved and ready to code 💻🐕",
   "You make my tail wag non-stop! 🐕🎶"
 ];
@@ -590,6 +590,11 @@ function setupIconBehavior(icon) {
       createGifElement(icon);
     }, 100);
     icon._hoverTimeout = hoverTimeout;
+    const happy = isHappy();
+    const pool = happy ? happyPuppyMessages : sadPuppyMessages;
+    const msg = pool[Math.floor(Math.random() * pool.length)];
+    showToast(msg);
+    bounceIcon();
   };
 
   icon._mouseLeaveHandler = () => {
@@ -601,6 +606,7 @@ function setupIconBehavior(icon) {
 
   icon.addEventListener("mouseenter", icon._mouseEnterHandler);
   icon.addEventListener("mouseleave", icon._mouseLeaveHandler);
+  icon.addEventListener("click", handleIconClick);
 }
 
 function createGifElement(icon) {
