@@ -390,7 +390,7 @@ function sampleTreat(difficulty) {
     hard: { count: 160, speedMin: 7, speedMax: 14 },
     surprise: { count: 200, speedMin: 8, speedMax: 16 }
   };
-
+  
   const scoreMap = {
     bum: -2,
     easy: 1,
@@ -398,7 +398,7 @@ function sampleTreat(difficulty) {
     hard: 5,
     surprise: 10
   }
-  
+
   // Normalize difficulty to lowercase
   const normalizedDifficulty = difficulty?.toLowerCase() || 'medium';
   
@@ -590,7 +590,7 @@ function setupIconBehavior(icon) {
 }
 
 function createGifElement(icon) {
-  is_happy = isHappy()
+  is_happy = isHappy();
   if (globalDragState.isDragging || !icon.parentNode) return;
 
   const gif = document.createElement("img");
@@ -791,9 +791,8 @@ function createImageElement() {
 function handleIconClick(e) {
   const diffEl = document.querySelector("div[class*='text-difficulty']");
   const difficulty = diffEl ? diffEl.textContent.trim() : "Unknown";
-  // showToast(`Difficulty: ${difficulty}`);
   const score = getTotalScore();
-  showToast(`Score: ${score}`)
+  showToast(`Difficulty: ${difficulty}, Score: ${score}`);
   bounceIcon();
 }
 
