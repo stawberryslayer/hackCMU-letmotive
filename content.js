@@ -56,27 +56,6 @@ function celebrate() {
   confetti();
 }
 
-// --- utilities ---
-function isVisible(el) {
-  if (!(el instanceof Element)) return false;
-  const r = el.getBoundingClientRect();
-  if (!r || r.width === 0 || r.height === 0) return false;
-  const cs = getComputedStyle(el);
-  return cs.display !== "none" && cs.visibility !== "hidden";
-}
-function getName(el) {
-  return (
-    el.getAttribute("aria-label") ||
-    el.title ||
-    el.innerText ||
-    el.textContent ||
-    ""
-  ).replace(/\s+/g, " ").trim();
-}
-function findSolutionButtonByText() {
-  
-  return null;
-}
 function startDomWatcher() {
   const observer = new MutationObserver(() => {
     const candidates = document.querySelectorAll('button, [role="button"], a[role="button"]');
