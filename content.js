@@ -11,8 +11,6 @@ function showToast(msg = "Woof accepted! Keep coding! 🐕") {
   setTimeout(() => toast.classList.remove("show"), 2600);
 }
 
-
-
 // --- micro confetti (canvas) ---
 function getOverlayCanvas() {
   let canvas = document.getElementById("codebloom-confetti");
@@ -72,6 +70,7 @@ function confettiBottom(opts = {}) {
     })(performance.now());
   });
 }
+
 const __cbAssetCache = new Map();
 async function loadTreatAsset(treat) {
   if (treat instanceof HTMLImageElement) return treat;
@@ -141,98 +140,143 @@ async function dropTreats(treats, options = {}) {
   });
 }
 
-// Safely resolve extension asset or plain URL
-function getAssetUrl(pathOrUrl) {
-  return (window.chrome?.runtime?.getURL ? chrome.runtime.getURL(pathOrUrl) : pathOrUrl);
-}
-
-// Show an animated dog GIF, bigger by size/scale, then hide
-function showDogGif({
-  src = "icons/dog_eating.gif", // pack this in your extension or use a full URL
-  size = 260,                   // base width in px (bigger dog => increase)
-  scale = 1.0,                  // extra multiplier (e.g., 1.4 for hard)
-  bottom = 36,                  // distance from bottom
-  duration = 2400               // ms on screen
-} = {}) {
-  const url = getAssetUrl(src);
-  let img = document.getElementById("codebloom-doggif");
-  if (!img) {
-    img = document.createElement("img");
-    img.id = "codebloom-doggif";
-    Object.assign(img.style, {
-      position: "fixed",
-      left: "50%",
-      bottom: `${bottom}px`,
-      transform: "translateX(-50%) scale(1)",
-      zIndex: "1000000",            // above confetti/toast
-      pointerEvents: "none",
-      opacity: "0",
-      transition: "opacity 180ms ease, transform 180ms ease"
-    });
-    document.body.appendChild(img);
+// --- celebration popup window ---
+async function showCelebrationPopup() {
+  // Remove existing popup if any
+  const existingPopup = document.getElementById("codebloom-celebration-popup");
+  if (existingPopup) {
+    existingPopup.remove();
   }
 
-  // Cache-bust to restart GIF animation each time
-  const bust = (url.includes("?") ? "&" : "?") + "t=" + Date.now();
-  img.src = url + bust;
+  try {
+    // Load HTML content from file
+    const htmlResponse = await fetch(chrome.runtime.getURL("celebration-popup.html"));
+    const htmlContent = await htmlResponse.text();
 
-  const px = Math.round(size * scale);
-  img.style.width = `${px}px`;
-  img.style.height = "auto";
+    // Create popup container
+    const popup = document.createElement("div");
+    popup.id = "codebloom-celebration-popup";
+    popup.className = "celebration-popup";
+    popup.innerHTML = htmlContent;
 
-  // pop in
-  requestAnimationFrame(() => {
-    img.style.opacity = "1";
-    img.style.transform = "translateX(-50%) scale(1.06)";
-    setTimeout(() => { img.style.transform = "translateX(-50%) scale(1)"; }, 180);
-  });
+    // Get saved name or use default
+    const savedName = localStorage.getItem('codebloom-pet-name') || 'CodePup';
+    
+    // Set the pet name and dog image
+    const nameInput = popup.querySelector('.pet-name-input');
+    const dogImage = popup.querySelector('.sit-dog-image');
+    
+    nameInput.value = savedName;
+    dogImage.src = chrome.runtime.getURL("icons/dog.png");
 
-  // auto-hide & remove
-  clearTimeout(img._hideTimer);
-  img._hideTimer = setTimeout(() => {
-    img.style.opacity = "0";
-    img.addEventListener("transitionend", function handler() {
-      img.removeEventListener("transitionend", handler);
-      img.remove();
-    }, { once: true });
-  }, duration);
+    document.body.appendChild(popup);
+
+    // Handle name input changes
+    nameInput.addEventListener('blur', () => {
+      const newName = nameInput.value.trim() || 'CodePup';
+      localStorage.setItem('codebloom-pet-name', newName);
+      nameInput.value = newName;
+    });
+
+    nameInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        nameInput.blur();
+      }
+    });
+
+    // Handle close button
+    const closeBtn = popup.querySelector('.popup-close');
+    closeBtn.addEventListener('click', () => {
+      popup.classList.add('popup-closing');
+      setTimeout(() => {
+        if (popup.parentNode) {
+          popup.remove();
+        }
+      }, 300);
+    });
+
+    // Animate in
+    setTimeout(() => {
+      popup.classList.add('popup-show');
+    }, 10);
+
+  } catch (error) {
+    console.error('Failed to load celebration popup:', error);
+    // Fallback to inline HTML if file loading fails
+    showCelebrationPopupFallback();
+  }
+}
+
+// Fallback function with inline HTML (removed - using HTML file only)
+function showCelebrationPopupFallback() {
+  console.error('Failed to load celebration-popup.html file. Please ensure the file exists.');
+}
+
+// Function to detect difficulty from the page
+function detectDifficulty() {
+  const diffEl = document.querySelector("div[class*='text-difficulty']");
+  if (diffEl) {
+    const text = diffEl.textContent.trim().toLowerCase();
+    if (text.includes('easy')) return 'easy';
+    if (text.includes('medium')) return 'medium';
+    if (text.includes('hard')) return 'hard';
+  }
+  return 'unknown';
 }
 
 // --- trigger once per accepted result ---
 const CELEBRATIONS = {
-  easy: () => celebrate({ treats: ["🍩","🧁","🍪"], treatOptions:{count:14,size:42,gravity:0.28}, confettiOptions:{count:80,speedMin:5,speedMax:9} }),
-  medium: () => celebrate({ treats: ["🍣","🍙","🍵"], treatOptions:{count:20,size:48,gravity:0.33}, confettiOptions:{count:120,speedMin:6,speedMax:12} }),
-  hard: () => celebrate({ treats: ["🥩","🍗","🍖"], treatOptions:{count:28,size:56,gravity:0.38,wind:0.01}, confettiOptions:{count:160,speedMin:7,speedMax:14} })
+  easy: {
+    treats: ["🍩","🧁","🍪"],
+    treatOptions: { count: 14, size: 42, gravity: 0.28 },
+    confettiOptions: { count: 80, speedMin: 5, speedMax: 9 }
+  },
+  medium: {
+    treats: ["🍣","🍙","🍵"],
+    treatOptions: { count: 20, size: 48, gravity: 0.33 },
+    confettiOptions: { count: 120, speedMin: 6, speedMax: 12 }
+  },
+  hard: {
+    treats: ["🥩","🍗","🍖"],
+    treatOptions: { count: 28, size: 56, gravity: 0.38, wind: 0.01 },
+    confettiOptions: { count: 160, speedMin: 7, speedMax: 14 }
+  },
+  unknown: {
+    treats: ["🍣","🍗","🥩"],
+    treatOptions: { count: 20, size: 48, gravity: 0.33 },
+    confettiOptions: { count: 120, speedMin: 6, speedMax: 12 }
+  }
 };
 
 let lastAcceptedStamp = 0;
-async function celebrate({
-  treats = ["🍣","🍗","🥩"],     // <-- default sushi/meat/drumstick
-  treatOptions = {},
-  confettiOptions = {},
- 
-} = {}) {
+async function celebrate() {
   const now = Date.now();
-  if (now - lastAcceptedStamp < 1200) return; // tighter debounce
+  if (now - lastAcceptedStamp < 1500) return; // debounce
   lastAcceptedStamp = now;
 
-  showToast("Accepted! Keep growing 🌿");
-  showDogGif({ 
-    // swap with your real path or URL
-    src: "icons/dog_eating.gif",
-    size: 280,          // base size; bump this to make it bigger overall
-    
-  });
+  // Detect difficulty and get appropriate celebration
+  const difficulty = detectDifficulty();
+  const celebration = CELEBRATIONS[difficulty];
 
+  // Show toast based on difficulty
+  const difficultyMessages = {
+    easy: "Easy peasy! Keep it up! 🍪",
+    medium: "Nice work on that medium! 🍣", 
+    hard: "Hard problem conquered! 🥩",
+    unknown: "Woof accepted! Keep coding! 🐕"
+  };
+  
+  showToast(difficultyMessages[difficulty]);
+
+  // Run food drop + confetti at the same time
   await Promise.all([
-    
-    dropTreats(treats, treatOptions),
-    confettiBottom(confettiOptions)
+    dropTreats(celebration.treats, celebration.treatOptions),
+    confettiBottom(celebration.confettiOptions)
   ]);
+
+  // Then show popup window
+  showCelebrationPopup();
 }
-
-
-
 
 function startDomWatcher() {
   const observer = new MutationObserver(() => {

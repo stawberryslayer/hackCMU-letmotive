@@ -33,3 +33,161 @@
 #codebloom-sideicon.dragging {
   transform: scale(1.05);
 }
+
+/* Celebration Popup Styles */
+#codebloom-celebration-popup {
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%) translateX(100%);
+  width: 320px;
+  max-height: 700px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  z-index: 1000000;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  opacity: 0;
+}
+
+#codebloom-celebration-popup.popup-show {
+  transform: translateY(-50%) translateX(0);
+  opacity: 1;
+}
+
+#codebloom-celebration-popup.popup-closing {
+  transform: translateY(-50%) translateX(100%);
+  opacity: 0;
+}
+
+.popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.pet-name-input {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  flex: 1;
+  margin-right: 12px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.pet-name-input:focus {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.02);
+}
+
+.pet-name-input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.popup-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.popup-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.popup-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  height: 400px;
+}
+
+.chat-box {
+  flex: 1;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+}
+
+.chat-message {
+  position: relative; /* needed for the tail */
+  display: inline-block;
+  max-width: 80%;
+  margin: 0 auto 20px auto; /* center above dog, space at bottom */
+  color: #333;
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  border-radius: 16px;
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  animation: messageSlideIn 0.5s ease-out;
+  text-align: left;
+}
+
+/* speech bubble tail */
+.chat-message::after {
+  content: "";
+  position: absolute;
+  bottom: -12px;       /* below the bubble */
+  left: 50%;           /* center horizontally */
+  transform: translateX(-50%);
+  border-width: 12px 12px 0 12px;
+  border-style: solid;
+  border-color: #fed6e3 transparent transparent transparent; /* matches bubble color */
+}
+
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.popup-footer {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  height: 200px;
+}
+
+.sit-dog-image {
+  width: 128px;
+  height: 200px;
+  object-fit: contain;
+  animation: dogBounce 2s ease-in-out infinite;
+}
+
+@keyframes dogBounce {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-8px) scale(1.05);
+  }
+}
