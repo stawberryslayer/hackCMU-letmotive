@@ -39,13 +39,34 @@ Project for HackCMU 2025
 ```
 .
 ├── manifest.json     # Extension manifest (permissions, popup definition)
-├── popup.html        # Popup UI (if applicable)
-├── popup.js          # Logic for popup window
 ├── content.js        # Content script injected into pages
 ├── styles.css        # Styles for popup and toast
 └── README.md        
 
 ```
+
+## Files Description
+
+content.js
+    Detects accepted submissions on LeetCode.
+    Triggers celebrations (temoji snacks, popup).
+    Injects floating dog icon with drag-and-drop support.
+    Manages icon interactions (bounce, hover animations).
+    Provides difficulty detection logic and score calculation: 
+        each problem’s difficulty adds different points;
+        dog is happy if score > 10, otherwise sad.
+
+manifest.json
+    Defines the extension: name (myPlugin), version (1.0.0), description.
+    Content scripts: inject JS/CSS into LeetCode.
+    Web resources: icons and celebration popup.
+    Permissions: minimal for functionality.
+
+styles.css
+    Toasts: elegant success messages.
+    Confetti: canvas-based animations.
+    Draggable pet icon: user can move.
+    Celebration popup: gradient background, animations, pet naming, chat bubbles, bouncing dog, responsive design.
 
 ## Features
 
