@@ -260,76 +260,36 @@ function detectDifficulty() {
   return 'unknown';
 }
 
-// --- treat selection based on difficulty ---
-function sampleTreat(difficulty) {
-  const treatMap = {
-    bum: ["🍋"],
-    easy: ["🍎"],
-    medium: ["🍔"],
-    hard: ["🥘"],
-    surprise: ["🍾"]
-  };
-  
-  const treatOptionsMap = {
-    bum: { count: 8, size: 32, gravity: 0.20 },
-    easy: { count: 14, size: 42, gravity: 0.28 },
-    medium: { count: 20, size: 48, gravity: 0.33 },
-    hard: { count: 28, size: 56, gravity: 0.38, wind: 0.01 },
-    surprise: { count: 35, size: 64, gravity: 0.45, wind: 0.02 }
-  };
-  
-  const confettiOptionsMap = {
-    bum: { count: 40, speedMin: 3, speedMax: 6 },
-    easy: { count: 80, speedMin: 5, speedMax: 9 },
-    medium: { count: 120, speedMin: 6, speedMax: 12 },
-    hard: { count: 160, speedMin: 7, speedMax: 14 },
-    surprise: { count: 200, speedMin: 8, speedMax: 16 }
-  };
-  
-  // Normalize difficulty to lowercase
-  const normalizedDifficulty = difficulty?.toLowerCase() || 'medium';
-  
-  // Define probability distributions for each difficulty
-  const probabilityMaps = {
-    easy: [
-      { difficulty: 'easy', probability: 0.5 },
-      { difficulty: 'medium', probability: 0.3 },
-      { difficulty: 'bum', probability: 0.1 }
-    ],
-    medium: [
-      { difficulty: 'medium', probability: 0.5 },
-      { difficulty: 'hard', probability: 0.3 },
-      { difficulty: 'easy', probability: 0.1 }
-    ],
-    hard: [
-      { difficulty: 'hard', probability: 0.5 },
-      { difficulty: 'surprise', probability: 0.3 },
-      { difficulty: 'medium', probability: 0.1 }
-    ]
-  };
-  
-  // Get the probability map for the current difficulty, fallback to medium
-  const probabilityMap = probabilityMaps[normalizedDifficulty] || probabilityMaps.medium;
-  
-  // Select treat difficulty based on weighted random selection
-  const random = Math.random();
-  let cumulativeProbability = 0;
-  let selectedDifficulty = 'medium'; // fallback
-  
-  for (const option of probabilityMap) {
-    cumulativeProbability += option.probability;
-    if (random <= cumulativeProbability) {
-      selectedDifficulty = option.difficulty;
-      break;
-    }
-  }
-  
-  // Get treats and options for the selected difficulty
-  const treats = treatMap[selectedDifficulty] || treatMap.medium;
-  const treatOptions = treatOptionsMap[selectedDifficulty] || treatOptionsMap.medium;
-  const confettiOptions = confettiOptionsMap[selectedDifficulty] || confettiOptionsMap.medium;
-  
-  return { treats, treatOptions, confettiOptions };
+// --- score tracking system ---
+const SCORE_STORAGE_KEY = 'codebloom-total-score';
+
+function isHappy() {
+  const score = getTotalScore();
+  return true ? score >= 10 : false;
+}
+
+function getTotalScore() {
+  const savedScore = localStorage.getItem(SCORE_STORAGE_KEY);
+  return savedScore ? parseInt(savedScore, 10) : 0;
+}
+
+function addToScore(points) {
+  const currentScore = getTotalScore();
+  const newScore = currentScore + points;
+  localStorage.setItem(SCORE_STORAGE_KEY, newScore.toString());
+  return newScore;
+}
+
+function resetScore() {
+  localStorage.removeItem(SCORE_STORAGE_KEY);
+  return 0;
+}
+
+// Debug function to log current score (can be called from console)
+function logCurrentScore() {
+  const score = getTotalScore();
+  console.log(`Current total score: ${score}`);
+  return score;
 }
 
 // --- treat selection based on difficulty ---
@@ -400,8 +360,90 @@ function sampleTreat(difficulty) {
   const treats = treatMap[selectedDifficulty] || treatMap.medium;
   const treatOptions = treatOptionsMap[selectedDifficulty] || treatOptionsMap.medium;
   const confettiOptions = confettiOptionsMap[selectedDifficulty] || confettiOptionsMap.medium;
+  const score = scoreMap[selectedDifficulty] || scoreMap.medium;
   
-  return { treats, treatOptions, confettiOptions };
+  return { treats, treatOptions, confettiOptions, score };
+}
+
+// --- treat selection based on difficulty ---
+function sampleTreat(difficulty) {
+  const treatMap = {
+    bum: ["🍋"],
+    easy: ["🍎"],
+    medium: ["🍔"],
+    hard: ["🥘"],
+    surprise: ["🍾"]
+  };
+  
+  const treatOptionsMap = {
+    bum: { count: 8, size: 32, gravity: 0.20 },
+    easy: { count: 14, size: 42, gravity: 0.28 },
+    medium: { count: 20, size: 48, gravity: 0.33 },
+    hard: { count: 28, size: 56, gravity: 0.38, wind: 0.01 },
+    surprise: { count: 35, size: 64, gravity: 0.45, wind: 0.02 }
+  };
+  
+  const confettiOptionsMap = {
+    bum: { count: 40, speedMin: 3, speedMax: 6 },
+    easy: { count: 80, speedMin: 5, speedMax: 9 },
+    medium: { count: 120, speedMin: 6, speedMax: 12 },
+    hard: { count: 160, speedMin: 7, speedMax: 14 },
+    surprise: { count: 200, speedMin: 8, speedMax: 16 }
+  };
+
+  const scoreMap = {
+    bum: -2,
+    easy: 1,
+    medium: 3,
+    hard: 5,
+    surprise: 10
+  }
+  
+  // Normalize difficulty to lowercase
+  const normalizedDifficulty = difficulty?.toLowerCase() || 'medium';
+  
+  // Define probability distributions for each difficulty
+  const probabilityMaps = {
+    easy: [
+      { difficulty: 'easy', probability: 0.5 },
+      { difficulty: 'medium', probability: 0.3 },
+      { difficulty: 'bum', probability: 0.1 }
+    ],
+    medium: [
+      { difficulty: 'medium', probability: 0.5 },
+      { difficulty: 'hard', probability: 0.3 },
+      { difficulty: 'easy', probability: 0.1 }
+    ],
+    hard: [
+      { difficulty: 'hard', probability: 0.5 },
+      { difficulty: 'surprise', probability: 0.3 },
+      { difficulty: 'medium', probability: 0.1 }
+    ]
+  };
+  
+  // Get the probability map for the current difficulty, fallback to medium
+  const probabilityMap = probabilityMaps[normalizedDifficulty] || probabilityMaps.medium;
+  
+  // Select treat difficulty based on weighted random selection
+  const random = Math.random();
+  let cumulativeProbability = 0;
+  let selectedDifficulty = 'medium'; // fallback
+  
+  for (const option of probabilityMap) {
+    cumulativeProbability += option.probability;
+    if (random <= cumulativeProbability) {
+      selectedDifficulty = option.difficulty;
+      break;
+    }
+  }
+  
+  // Get treats and options for the selected difficulty
+  const treats = treatMap[selectedDifficulty] || treatMap.medium;
+  const treatOptions = treatOptionsMap[selectedDifficulty] || treatOptionsMap.medium;
+  const confettiOptions = confettiOptionsMap[selectedDifficulty] || confettiOptionsMap.medium;
+  const score = scoreMap[selectedDifficulty] || scoreMap.medium;
+  
+  return { treats, treatOptions, confettiOptions, score };
 }
 
 // --- trigger once per accepted result ---
@@ -421,7 +463,10 @@ async function celebrate() {
   const difficulty = detectDifficulty();
   
   // Get treats and options based on difficulty
-  const { treats, treatOptions, confettiOptions } = sampleTreat(difficulty);
+  const { treats, treatOptions, confettiOptions, score } = sampleTreat(difficulty);
+  
+  // Add score to persistent total
+  const newTotalScore = addToScore(score);
 
   // Show toast based on difficulty
   const difficultyMessages = {
@@ -544,12 +589,13 @@ function setupIconBehavior(icon) {
   icon.addEventListener("mouseleave", icon._mouseLeaveHandler);
 }
 
-function createGifElement(icon, isHappy=false) {
+function createGifElement(icon) {
+  is_happy = isHappy()
   if (globalDragState.isDragging || !icon.parentNode) return;
 
   const gif = document.createElement("img");
   gif.id = "codebloom-sideicon-gif";
-  if (isHappy) {
+  if (is_happy) {
     gif.src = chrome.runtime.getURL("icons/happydog.gif");
   } else {
     gif.src = chrome.runtime.getURL("icons/saddog.gif");
@@ -745,7 +791,9 @@ function createImageElement() {
 function handleIconClick(e) {
   const diffEl = document.querySelector("div[class*='text-difficulty']");
   const difficulty = diffEl ? diffEl.textContent.trim() : "Unknown";
-  showToast(`Difficulty: ${difficulty}`);
+  // showToast(`Difficulty: ${difficulty}`);
+  const score = getTotalScore();
+  showToast(`Score: ${score}`)
   bounceIcon();
 }
 

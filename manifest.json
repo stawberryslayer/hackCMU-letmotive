@@ -18,5 +18,6 @@
       "matches": ["https://leetcode.com/*", "https://*.leetcode.com/*"]
     }
   ],
+  "action": {"default_popup": "celebration-popup.html"},
   "permissions": []
 }
