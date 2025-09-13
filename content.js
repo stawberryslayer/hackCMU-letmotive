@@ -11,58 +11,160 @@ function showToast(msg = "Woof accepted! Keep coding! 🐕") {
   setTimeout(() => toast.classList.remove("show"), 2600);
 }
 
+
+
 // --- micro confetti (canvas) ---
-function confetti() {
+function getOverlayCanvas() {
   let canvas = document.getElementById("codebloom-confetti");
   if (!canvas) {
     canvas = document.createElement("canvas");
     canvas.id = "codebloom-confetti";
+    Object.assign(canvas.style, { position: "fixed", inset: "0", zIndex: "999998", pointerEvents: "none" });
     document.body.appendChild(canvas);
-    canvas.width = innerWidth;
-    canvas.height = innerHeight;
-    addEventListener("resize", () => {
-      canvas.width = innerWidth;
-      canvas.height = innerHeight;
-    });
+    const resize = () => { canvas.width = innerWidth; canvas.height = innerHeight; };
+    resize(); addEventListener("resize", resize);
   }
+  return canvas;
+}
+function confettiBottom(opts = {}) {
+  const canvas = getOverlayCanvas();
   const ctx = canvas.getContext("2d");
-  const pieces = Array.from({ length: 80 }, () => ({
-    x: Math.random() * canvas.width,
-    y: -10 - Math.random() * 40,
-    s: 4 + Math.random() * 6,
-    vy: 2 + Math.random() * 3,
-    vx: -1 + Math.random() * 2,
-    r: Math.random() * Math.PI
-  }));
-  let t = 0;
-  (function frame() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    pieces.forEach(p => {
-      p.x += p.vx;
-      p.y += p.vy;
-      p.r += 0.05;
-      ctx.save();
-      ctx.translate(p.x, p.y);
-      ctx.rotate(p.r);
-      ctx.fillStyle = `hsl(${(t + p.x) % 360}, 80%, 60%)`;
-      ctx.fillRect(-p.s / 2, -p.s / 2, p.s, p.s);
-      ctx.restore();
-    });
-    t += 2;
-    if (t < 180) requestAnimationFrame(frame);
-    else ctx.clearRect(0, 0, canvas.width, canvas.height);
-  })();
+  const {
+    count = 120, gravity = 0.18, airDrag = 0.985,
+    spread = Math.PI / 2, speedMin = 6, speedMax = 12,
+    sizeMin = 4, sizeMax = 8, colors = null, duration = 1800
+  } = opts;
+
+  const parts = Array.from({ length: count }, () => {
+    const angle = (-Math.PI/2) + (Math.random() - 0.5) * spread;
+    const speed = speedMin + Math.random() * (speedMax - speedMin);
+    return {
+      x: Math.random() * canvas.width,
+      y: canvas.height - 2,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      s: sizeMin + Math.random() * (sizeMax - sizeMin),
+      r: Math.random() * Math.PI * 2,
+      vr: (Math.random() - 0.5) * 0.25,
+      color: colors ? colors[(Math.random()*colors.length)|0] : null,
+      hue: (Math.random()*360)|0
+    };
+  });
+
+  const t0 = performance.now();
+  return new Promise(resolve => {
+    (function frame(now){
+      const dt = Math.min(32, (now - (frame._last||now))) / 16.67; frame._last = now;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      let alive = false;
+      for (const p of parts) {
+        p.vy += gravity*dt; p.vx *= airDrag; p.vy *= airDrag;
+        p.x += p.vx*dt; p.y += p.vy*dt; p.r += p.vr*dt;
+        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.r);
+        ctx.fillStyle = p.color || `hsl(${p.hue},80%,55%)`;
+        ctx.fillRect(-p.s/2, -p.s/2, p.s, p.s);
+        ctx.restore();
+        if (p.y < canvas.height + 40) alive = true;
+      }
+      if ((now - t0) < duration && alive) requestAnimationFrame(frame);
+      else { ctx.clearRect(0,0,canvas.width,canvas.height); resolve(); }
+    })(performance.now());
+  });
+}
+const __cbAssetCache = new Map();
+async function loadTreatAsset(treat) {
+  if (treat instanceof HTMLImageElement) return treat;
+  const key = typeof treat === "string" ? treat : JSON.stringify(treat);
+  if (__cbAssetCache.has(key)) return __cbAssetCache.get(key);
+
+  // emoji?
+  if (typeof treat === "string" && /\p{Extended_Pictographic}/u.test(treat)) {
+    const marker = { __emoji__: true, emoji: treat };
+    __cbAssetCache.set(key, marker); return marker;
+  }
+  // url or inline svg
+  let url = treat;
+  if (typeof treat === "string" && treat.trim().startsWith("<svg")) {
+    url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(treat.trim());
+  }
+  const img = new Image(); img.decoding = "async"; img.loading = "eager"; img.src = url;
+  await img.decode().catch(()=>{});
+  __cbAssetCache.set(key, img); return img;
+}
+
+async function dropTreats(treats, options = {}) {
+  const canvas = getOverlayCanvas();
+  const ctx = canvas.getContext("2d");
+  const { count = 20, size = 48, gravity = 0.35, airDrag = 0.992, wind = 0, spin = true, jitter = 0.15, duration = 2200 } = options;
+  const assets = await Promise.all((Array.isArray(treats) ? treats : [treats]).map(loadTreatAsset));
+  if (!assets.length) return;
+  const sprites = Array.from({ length: count }, () => {
+    const a = assets[(Math.random()*assets.length)|0];
+    return {
+      x: Math.random()*canvas.width,
+      y: -20 - Math.random()*80,
+      vx: (Math.random()-0.5)*(1.5 + jitter*4) + wind,
+      vy: 1 + Math.random()*2 + jitter*2,
+      r: Math.random()*Math.PI*2,
+      vr: spin ? (Math.random()-0.5)*0.08 : 0,
+      scale: 0.85 + Math.random()*0.5,
+      asset: a
+    };
+  });
+  const t0 = performance.now();
+  return new Promise(resolve => {
+    (function frame(now){
+      const dt = Math.min(32, (now - (frame._last||now))) / 16.67; frame._last = now;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      let alive = false;
+      for (const s of sprites) {
+        s.vy += gravity*dt; s.vx = (s.vx + wind) * airDrag; s.vy *= airDrag;
+        s.x += s.vx*dt; s.y += s.vy*dt; s.r += s.vr*dt;
+        ctx.save(); ctx.translate(s.x,s.y); ctx.rotate(s.r);
+        const drawSize = size * s.scale;
+        if (s.asset.__emoji__) {
+          ctx.font = `${drawSize}px system-ui, Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji`;
+          ctx.textAlign = "center"; ctx.textBaseline = "middle";
+          ctx.fillText(s.asset.emoji, 0, 0);
+        } else {
+          const w = s.asset.naturalWidth || drawSize, h = s.asset.naturalHeight || drawSize;
+          const ratio = w && h ? w/h : 1;
+          ctx.drawImage(s.asset, -drawSize/2, -drawSize/(2*ratio), drawSize, drawSize/ratio);
+        }
+        ctx.restore();
+        if (s.y < canvas.height + size) alive = true;
+      }
+      if ((now - t0) < duration && alive) requestAnimationFrame(frame);
+      else { ctx.clearRect(0,0,canvas.width,canvas.height); resolve(); }
+    })(performance.now());
+  });
 }
 
 // --- trigger once per accepted result ---
+const CELEBRATIONS = {
+  easy: () => celebrate({ treats: ["🍩","🧁","🍪"], treatOptions:{count:14,size:42,gravity:0.28}, confettiOptions:{count:80,speedMin:5,speedMax:9} }),
+  medium: () => celebrate({ treats: ["🍣","🍙","🍵"], treatOptions:{count:20,size:48,gravity:0.33}, confettiOptions:{count:120,speedMin:6,speedMax:12} }),
+  hard: () => celebrate({ treats: ["🥩","🍗","🍖"], treatOptions:{count:28,size:56,gravity:0.38,wind:0.01}, confettiOptions:{count:160,speedMin:7,speedMax:14} })
+};
 let lastAcceptedStamp = 0;
-function celebrate() {
+async function celebrate({
+  treats = ["🍣","🍗","🥩"],     // <-- default sushi/meat/drumstick
+  treatOptions = {},
+  confettiOptions = {}
+} = {}) {
   const now = Date.now();
-  if (now - lastAcceptedStamp < 3000) return; // debounce
+  if (now - lastAcceptedStamp < 1200) return; // tighter debounce
   lastAcceptedStamp = now;
-  showToast("Woof accepted! Keep coding! 🐕");
-  confetti();
+
+  showToast("Accepted! Keep growing 🌿");
+  await Promise.all([
+    confettiBottom(confettiOptions),
+    dropTreats(treats, treatOptions)
+  ]);
 }
+
+
+
 
 function startDomWatcher() {
   const observer = new MutationObserver(() => {
