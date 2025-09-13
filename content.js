@@ -209,7 +209,7 @@ async function showCelebrationPopup() {
 
     // Handle name input changes
     nameInput.addEventListener('blur', () => {
-      const newName = nameInput.value.trim() || 'CodePup';
+      const newName = nameInput.value.trim() || 'Name your pup:';
       localStorage.setItem('codebloom-pet-name', newName);
       nameInput.value = newName;
     });

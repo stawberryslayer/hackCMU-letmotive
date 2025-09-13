@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "myPlugin",
+  "name": "CodePup",
   "version": "1.0.0",
-  "description": "Celebrate your Accepted submissions with positive, uplifting hints.",
+  "description": "Enhances the LeetCode coding experience with cute and motivational pup.",
   "icons": { "128": "icons/dog.png" },
   "content_scripts": [
     {
