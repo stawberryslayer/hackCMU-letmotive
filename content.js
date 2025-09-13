@@ -224,28 +224,155 @@ function detectDifficulty() {
   return 'unknown';
 }
 
+// --- treat selection based on difficulty ---
+function sampleTreat(difficulty) {
+  const treatMap = {
+    bum: ["🍋"],
+    easy: ["🍎"],
+    medium: ["🍔"],
+    hard: ["🥘"],
+    surprise: ["🍾"]
+  };
+  
+  const treatOptionsMap = {
+    bum: { count: 8, size: 32, gravity: 0.20 },
+    easy: { count: 14, size: 42, gravity: 0.28 },
+    medium: { count: 20, size: 48, gravity: 0.33 },
+    hard: { count: 28, size: 56, gravity: 0.38, wind: 0.01 },
+    surprise: { count: 35, size: 64, gravity: 0.45, wind: 0.02 }
+  };
+  
+  const confettiOptionsMap = {
+    bum: { count: 40, speedMin: 3, speedMax: 6 },
+    easy: { count: 80, speedMin: 5, speedMax: 9 },
+    medium: { count: 120, speedMin: 6, speedMax: 12 },
+    hard: { count: 160, speedMin: 7, speedMax: 14 },
+    surprise: { count: 200, speedMin: 8, speedMax: 16 }
+  };
+  
+  // Normalize difficulty to lowercase
+  const normalizedDifficulty = difficulty?.toLowerCase() || 'medium';
+  
+  // Define probability distributions for each difficulty
+  const probabilityMaps = {
+    easy: [
+      { difficulty: 'easy', probability: 0.5 },
+      { difficulty: 'medium', probability: 0.3 },
+      { difficulty: 'bum', probability: 0.1 }
+    ],
+    medium: [
+      { difficulty: 'medium', probability: 0.5 },
+      { difficulty: 'hard', probability: 0.3 },
+      { difficulty: 'easy', probability: 0.1 }
+    ],
+    hard: [
+      { difficulty: 'hard', probability: 0.5 },
+      { difficulty: 'surprise', probability: 0.3 },
+      { difficulty: 'medium', probability: 0.1 }
+    ]
+  };
+  
+  // Get the probability map for the current difficulty, fallback to medium
+  const probabilityMap = probabilityMaps[normalizedDifficulty] || probabilityMaps.medium;
+  
+  // Select treat difficulty based on weighted random selection
+  const random = Math.random();
+  let cumulativeProbability = 0;
+  let selectedDifficulty = 'medium'; // fallback
+  
+  for (const option of probabilityMap) {
+    cumulativeProbability += option.probability;
+    if (random <= cumulativeProbability) {
+      selectedDifficulty = option.difficulty;
+      break;
+    }
+  }
+  
+  // Get treats and options for the selected difficulty
+  const treats = treatMap[selectedDifficulty] || treatMap.medium;
+  const treatOptions = treatOptionsMap[selectedDifficulty] || treatOptionsMap.medium;
+  const confettiOptions = confettiOptionsMap[selectedDifficulty] || confettiOptionsMap.medium;
+  
+  return { treats, treatOptions, confettiOptions };
+}
+
+// --- treat selection based on difficulty ---
+function sampleTreat(difficulty) {
+  const treatMap = {
+    bum: ["🍋"],
+    easy: ["🍎"],
+    medium: ["🍔"],
+    hard: ["🥘"],
+    surprise: ["🍾"]
+  };
+  
+  const treatOptionsMap = {
+    bum: { count: 8, size: 32, gravity: 0.20 },
+    easy: { count: 14, size: 42, gravity: 0.28 },
+    medium: { count: 20, size: 48, gravity: 0.33 },
+    hard: { count: 28, size: 56, gravity: 0.38, wind: 0.01 },
+    surprise: { count: 35, size: 64, gravity: 0.45, wind: 0.02 }
+  };
+  
+  const confettiOptionsMap = {
+    bum: { count: 40, speedMin: 3, speedMax: 6 },
+    easy: { count: 80, speedMin: 5, speedMax: 9 },
+    medium: { count: 120, speedMin: 6, speedMax: 12 },
+    hard: { count: 160, speedMin: 7, speedMax: 14 },
+    surprise: { count: 200, speedMin: 8, speedMax: 16 }
+  };
+  
+  // Normalize difficulty to lowercase
+  const normalizedDifficulty = difficulty?.toLowerCase() || 'medium';
+  
+  // Define probability distributions for each difficulty
+  const probabilityMaps = {
+    easy: [
+      { difficulty: 'easy', probability: 0.5 },
+      { difficulty: 'medium', probability: 0.3 },
+      { difficulty: 'bum', probability: 0.1 }
+    ],
+    medium: [
+      { difficulty: 'medium', probability: 0.5 },
+      { difficulty: 'hard', probability: 0.3 },
+      { difficulty: 'easy', probability: 0.1 }
+    ],
+    hard: [
+      { difficulty: 'hard', probability: 0.5 },
+      { difficulty: 'surprise', probability: 0.3 },
+      { difficulty: 'medium', probability: 0.1 }
+    ]
+  };
+  
+  // Get the probability map for the current difficulty, fallback to medium
+  const probabilityMap = probabilityMaps[normalizedDifficulty] || probabilityMaps.medium;
+  
+  // Select treat difficulty based on weighted random selection
+  const random = Math.random();
+  let cumulativeProbability = 0;
+  let selectedDifficulty = 'medium'; // fallback
+  
+  for (const option of probabilityMap) {
+    cumulativeProbability += option.probability;
+    if (random <= cumulativeProbability) {
+      selectedDifficulty = option.difficulty;
+      break;
+    }
+  }
+  
+  // Get treats and options for the selected difficulty
+  const treats = treatMap[selectedDifficulty] || treatMap.medium;
+  const treatOptions = treatOptionsMap[selectedDifficulty] || treatOptionsMap.medium;
+  const confettiOptions = confettiOptionsMap[selectedDifficulty] || confettiOptionsMap.medium;
+  
+  return { treats, treatOptions, confettiOptions };
+}
+
 // --- trigger once per accepted result ---
 const CELEBRATIONS = {
-  easy: {
-    treats: ["🍩","🧁","🍪"],
-    treatOptions: { count: 14, size: 42, gravity: 0.28 },
-    confettiOptions: { count: 80, speedMin: 5, speedMax: 9 }
-  },
-  medium: {
-    treats: ["🍣","🍙","🍵"],
-    treatOptions: { count: 20, size: 48, gravity: 0.33 },
-    confettiOptions: { count: 120, speedMin: 6, speedMax: 12 }
-  },
-  hard: {
-    treats: ["🥩","🍗","🍖"],
-    treatOptions: { count: 28, size: 56, gravity: 0.38, wind: 0.01 },
-    confettiOptions: { count: 160, speedMin: 7, speedMax: 14 }
-  },
-  unknown: {
-    treats: ["🍣","🍗","🥩"],
-    treatOptions: { count: 20, size: 48, gravity: 0.33 },
-    confettiOptions: { count: 120, speedMin: 6, speedMax: 12 }
-  }
+  easy: () => celebrate("easy"),
+  medium: () => celebrate("medium"),
+  hard: () => celebrate("hard")
 };
 
 let lastAcceptedStamp = 0;
@@ -256,7 +383,9 @@ async function celebrate() {
 
   // Detect difficulty and get appropriate celebration
   const difficulty = detectDifficulty();
-  const celebration = CELEBRATIONS[difficulty];
+  
+  // Get treats and options based on difficulty
+  const { treats, treatOptions, confettiOptions } = sampleTreat(difficulty);
 
   // Show toast based on difficulty
   const difficultyMessages = {
@@ -270,8 +399,8 @@ async function celebrate() {
 
   // Show popup window and run animations simultaneously
   await Promise.all([
-    dropTreats(celebration.treats, celebration.treatOptions),
-    confettiBottom(celebration.confettiOptions),
+    dropTreats(treats, treatOptions),
+    confettiBottom(confettiOptions),
     showCelebrationPopup() // Now runs at the same time
   ]);
 }
