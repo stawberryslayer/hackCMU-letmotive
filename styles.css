@@ -191,3 +191,10 @@
     transform: translateY(-8px) scale(1.05);
   }
 }
+
+.food-emoji {
+  transition: transform 0.2s ease;
+}
+.food-emoji:hover {
+  transform: scale(1.3);
+}

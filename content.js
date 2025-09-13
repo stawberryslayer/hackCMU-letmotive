@@ -1,3 +1,17 @@
+// constants
+const eatingMessages = [
+  "Yum! Thanks for the treat! 🐾",
+  "Delicious! More please 🍩",
+  "That hit the spot 😋",
+  "Woof! Best snack ever 🐶",
+  "Mmm… energy for more coding! 💻",
+  "Crunch crunch… so tasty! 🍪",
+  "Thanks, buddy! You’re the best 🐾",
+  "Nom nom nom… yummy! 🍣",
+  "Yay! I feel stronger already 💪",
+  "Slurp! That was paw-some 🐕"
+];
+
 // --- tiny toast ---
 function showToast(msg = "Woof accepted! Keep coding! 🐕") {
   let toast = document.getElementById("codebloom-toast");
@@ -403,6 +417,7 @@ async function celebrate() {
     confettiBottom(confettiOptions),
     showCelebrationPopup() // Now runs at the same time
   ]);
+  spawnClickableTreats(treats);
 }
 
 function startDomWatcher() {
@@ -724,6 +739,68 @@ function bounceIcon() {
       }, 150);
     }, 150);
   }
+}
+
+function spawnClickableTreats(treats) {
+  const popup = document.querySelector("#codebloom-celebration-popup");
+  const footer = popup?.querySelector(".popup-footer");
+  const dogImg = footer?.querySelector(".sit-dog-image");
+  if (!popup || !footer || !dogImg) return;
+
+  // Get dog position relative to popup
+  const popupRect = popup.getBoundingClientRect();
+  const dogRect = dogImg.getBoundingClientRect();
+
+  const dogCenterX = dogRect.left - popupRect.left + dogRect.width / 2;
+  const dogCenterY = dogRect.top - popupRect.top + dogRect.height / 2;
+
+  // Hardcoded positions around the dog (relative offsets)
+  const positions = [
+    { x: -80, y: -60 },  // Top left
+    { x: 80, y: -60 },   // Top right
+    { x: -100, y: 0 },   // Left
+    { x: 100, y: 0 },    // Right
+    { x: -80, y: 60 },   // Bottom left
+    { x: 80, y: 60 },    // Bottom right
+    { x: 0, y: -80 },    // Top center
+    { x: 0, y: 80 }      // Bottom center
+  ];
+
+  // For each treat, place 3 instances
+  treats.forEach((emoji) => {
+    for (let i = 0; i < 3; i++) {
+      const pos = positions[(Math.floor(Math.random() * positions.length))]; // pick random spot
+      
+      const span = document.createElement("span");
+      span.textContent = emoji;
+      span.className = "food-emoji";
+
+      const x = dogCenterX + pos.x + (Math.random() * 20 - 10); // jitter so they don’t overlap
+      const y = dogCenterY + pos.y + (Math.random() * 20 - 10);
+
+      span.style.position = "absolute";
+      span.style.left = `${x - 16}px`;
+      span.style.top = `${y - 16}px`;
+      span.style.fontSize = "24px";
+      span.style.cursor = "pointer";
+      span.style.zIndex = "1000002";
+
+      span.addEventListener("click", () => {
+        span.remove();
+        dogImg.src = chrome.runtime.getURL("icons/eat.gif");
+        const chatMsg = document.querySelector("#codebloom-celebration-popup .chat-message");
+        if (chatMsg) {
+          const msg = eatingMessages[Math.floor(Math.random() * eatingMessages.length)];
+          chatMsg.textContent = msg;
+        }
+        setTimeout(() => {
+          dogImg.src = chrome.runtime.getURL("icons/sitdog.png");
+        }, 5000);
+      });
+
+      footer.appendChild(span); // append to footer (dog container)
+    }
+  });
 }
 
 // --- kick off ---
