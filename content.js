@@ -34,6 +34,20 @@ const foodMessages = {
   ]
 };
 
+const happyPuppyMessages = [
+  "Yay! More coding fun together 🎉",
+  "Best buddy ever! Thanks for the click 💕",
+  "Feeling loved and ready to code 💻🐕",
+  "You make my tail wag non-stop! 🐕🎶"
+];
+
+const sadPuppyMessages = [
+  "Woof… I need more treats 🍪",
+  "Looking for belly rubs but found none 🐾",
+  "Feeling a little down… cheer me up? 🐶",
+  "I’ll be happier if you solve one more problem 📝"
+];
+
 // --- tiny toast ---
 function showToast(msg = "Woof accepted! Keep coding! 🐕") {
   let toast = document.getElementById("codebloom-toast");
@@ -265,7 +279,7 @@ const SCORE_STORAGE_KEY = 'codebloom-total-score';
 
 function isHappy() {
   const score = getTotalScore();
-  return true ? score >= 10 : false;
+  return score >= 10;
 }
 
 function getTotalScore() {
@@ -590,7 +604,7 @@ function setupIconBehavior(icon) {
 }
 
 function createGifElement(icon) {
-  is_happy = isHappy();
+  const is_happy = isHappy();
   if (globalDragState.isDragging || !icon.parentNode) return;
 
   const gif = document.createElement("img");
@@ -789,10 +803,14 @@ function createImageElement() {
 }
 
 function handleIconClick(e) {
-  const diffEl = document.querySelector("div[class*='text-difficulty']");
-  const difficulty = diffEl ? diffEl.textContent.trim() : "Unknown";
-  const score = getTotalScore();
-  showToast(`Difficulty: ${difficulty}, Score: ${score}`);
+  // const diffEl = document.querySelector("div[class*='text-difficulty']");
+  // const difficulty = diffEl ? diffEl.textContent.trim() : "Unknown";
+  // const score = getTotalScore();
+  // showToast(`Difficulty: ${difficulty}, Score: ${score}`);
+  const is_happy = isHappy();
+  const pool = is_happy ? happyPuppyMessages : sadPuppyMessages;
+  const msg = pool[Math.floor(Math.random() * pool.length)];
+  showToast(msg);
   bounceIcon();
 }
 
