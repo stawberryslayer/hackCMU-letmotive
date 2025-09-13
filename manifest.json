@@ -14,7 +14,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["icons/dog.png"],
+      "resources": ["icons/dog.png", "icons/happydog.gif", "icons/saddog.gif", "icons/sitdog.png", "celebration-popup.html", "icons/eat.gif"],
       "matches": ["https://leetcode.com/*", "https://*.leetcode.com/*"]
     }
   ],
