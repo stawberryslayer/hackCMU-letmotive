@@ -73,23 +73,30 @@ function getName(el) {
     ""
   ).replace(/\s+/g, " ").trim();
 }
-
 function findSolutionButtonByText() {
-  const candidates = document.querySelectorAll('button, [role="button"], a[role="button"]');
-  for (const el of candidates) {
-    const name = (el.getAttribute('aria-label') || el.title || el.innerText || el.textContent || '')
-      .replace(/\s+/g, ' ').trim();
-    if (/^solution$/i.test(name)) return el;
-  }
+  
   return null;
 }
+function startDomWatcher() {
+  const observer = new MutationObserver(() => {
+    const candidates = document.querySelectorAll('button, [role="button"], a[role="button"]');
+    for (const el of candidates) {
+      const name = (
+        el.getAttribute('aria-label') ||
+        el.title ||
+        el.innerText ||
+        el.textContent ||
+        ''
+      ).replace(/\s+/g, ' ').trim();
 
+      if (/^solution$/i.test(name)) {
+        celebrate();
+        return; // stop after the first match
+      }
+    }
+  });
 
-function myDomwatcher(){
-  const btn = findSolutionButtonByText();
-  if (btn){
-    celebrate()
-  }
+  observer.observe(document.body, { childList: true, subtree: true });
 }
 
 // kick off
