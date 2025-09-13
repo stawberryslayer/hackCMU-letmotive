@@ -26,6 +26,7 @@ function getOverlayCanvas() {
   }
   return canvas;
 }
+
 function confettiBottom(opts = {}) {
   const canvas = getOverlayCanvas();
   const ctx = canvas.getContext("2d");
@@ -140,26 +141,93 @@ async function dropTreats(treats, options = {}) {
   });
 }
 
+// Safely resolve extension asset or plain URL
+function getAssetUrl(pathOrUrl) {
+  return (window.chrome?.runtime?.getURL ? chrome.runtime.getURL(pathOrUrl) : pathOrUrl);
+}
+
+// Show an animated dog GIF, bigger by size/scale, then hide
+function showDogGif({
+  src = "icons/dog_eating.gif", // pack this in your extension or use a full URL
+  size = 260,                   // base width in px (bigger dog => increase)
+  scale = 1.0,                  // extra multiplier (e.g., 1.4 for hard)
+  bottom = 36,                  // distance from bottom
+  duration = 2400               // ms on screen
+} = {}) {
+  const url = getAssetUrl(src);
+  let img = document.getElementById("codebloom-doggif");
+  if (!img) {
+    img = document.createElement("img");
+    img.id = "codebloom-doggif";
+    Object.assign(img.style, {
+      position: "fixed",
+      left: "50%",
+      bottom: `${bottom}px`,
+      transform: "translateX(-50%) scale(1)",
+      zIndex: "1000000",            // above confetti/toast
+      pointerEvents: "none",
+      opacity: "0",
+      transition: "opacity 180ms ease, transform 180ms ease"
+    });
+    document.body.appendChild(img);
+  }
+
+  // Cache-bust to restart GIF animation each time
+  const bust = (url.includes("?") ? "&" : "?") + "t=" + Date.now();
+  img.src = url + bust;
+
+  const px = Math.round(size * scale);
+  img.style.width = `${px}px`;
+  img.style.height = "auto";
+
+  // pop in
+  requestAnimationFrame(() => {
+    img.style.opacity = "1";
+    img.style.transform = "translateX(-50%) scale(1.06)";
+    setTimeout(() => { img.style.transform = "translateX(-50%) scale(1)"; }, 180);
+  });
+
+  // auto-hide & remove
+  clearTimeout(img._hideTimer);
+  img._hideTimer = setTimeout(() => {
+    img.style.opacity = "0";
+    img.addEventListener("transitionend", function handler() {
+      img.removeEventListener("transitionend", handler);
+      img.remove();
+    }, { once: true });
+  }, duration);
+}
+
 // --- trigger once per accepted result ---
 const CELEBRATIONS = {
   easy: () => celebrate({ treats: ["🍩","🧁","🍪"], treatOptions:{count:14,size:42,gravity:0.28}, confettiOptions:{count:80,speedMin:5,speedMax:9} }),
   medium: () => celebrate({ treats: ["🍣","🍙","🍵"], treatOptions:{count:20,size:48,gravity:0.33}, confettiOptions:{count:120,speedMin:6,speedMax:12} }),
   hard: () => celebrate({ treats: ["🥩","🍗","🍖"], treatOptions:{count:28,size:56,gravity:0.38,wind:0.01}, confettiOptions:{count:160,speedMin:7,speedMax:14} })
 };
+
 let lastAcceptedStamp = 0;
 async function celebrate({
   treats = ["🍣","🍗","🥩"],     // <-- default sushi/meat/drumstick
   treatOptions = {},
-  confettiOptions = {}
+  confettiOptions = {},
+ 
 } = {}) {
   const now = Date.now();
   if (now - lastAcceptedStamp < 1200) return; // tighter debounce
   lastAcceptedStamp = now;
 
   showToast("Accepted! Keep growing 🌿");
+  showDogGif({ 
+    // swap with your real path or URL
+    src: "icons/dog_eating.gif",
+    size: 280,          // base size; bump this to make it bigger overall
+    
+  });
+
   await Promise.all([
-    confettiBottom(confettiOptions),
-    dropTreats(treats, treatOptions)
+    
+    dropTreats(treats, treatOptions),
+    confettiBottom(confettiOptions)
   ]);
 }
 
