@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "CodeBloom",
+  "name": "myPlugin",
   "version": "1.0.0",
-  "description": "Celebrate Accepted submissions on LeetCode with a positive popup and confetti.",
+  "description": "Celebrate your Accepted submissions with positive, uplifting hints.",
   "icons": { "128": "icons/dog.png" },
   "content_scripts": [
     {
@@ -14,7 +14,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["icons/dog.png"],
+      "resources": ["icons/dog.png", "icons/happydog.gif", "icons/saddog.gif"],
       "matches": ["https://leetcode.com/*", "https://*.leetcode.com/*"]
     }
   ],
