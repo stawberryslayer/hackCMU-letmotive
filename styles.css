@@ -12,14 +12,19 @@
   
 #codebloom-sideicon {
   position: fixed;
-  right: 20px;
-  top: 40%;
-  width: 144px;
-  height: 144px;
+  left: 98%;    /* start position */
+  top: 30%;
+  width: 108px;
+  height: 108px;
   z-index: 999999;
-  cursor: pointer;
+  cursor: grab;
   transition: transform 0.2s ease;
 }
-#codebloom-sideicon:hover {
-  transform: scale(2);
+
+#codebloom-sideicon:active {
+  cursor: grabbing;
+}
+
+#codebloom-sideicon.dragging {
+  transform: scale(1.05);
 }
