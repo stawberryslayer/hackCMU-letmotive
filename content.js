@@ -1,23 +1,3 @@
-// ===== Inject minimal CSS for the toast (.show) =====
-(function ensureStyles(){
-  if (document.getElementById("codebloom-styles")) return;
-  const style = document.createElement("style");
-  style.id = "codebloom-styles";
-  style.textContent = `
-    #codebloom-toast {
-      position: fixed; right: 20px; bottom: 24px;
-      padding: 12px 16px; background: #111; color: #fff;
-      border-radius: 10px; font: 600 14px system-ui, -apple-system, "Segoe UI";
-      box-shadow: 0 10px 30px rgba(0,0,0,.25);
-      opacity: 0; transform: translateY(10px);
-      transition: opacity .25s ease, transform .25s ease;
-      z-index: 999999;
-    }
-    #codebloom-toast.show { opacity: 1; transform: translateY(0); }
-  `;
-  document.head.appendChild(style);
-})();
-
 // --- tiny toast ---
 function showToast(msg = "Accepted! Blooming skills 🌱") {
   let toast = document.getElementById("codebloom-toast");
@@ -38,8 +18,12 @@ function confetti() {
     canvas = document.createElement("canvas");
     canvas.id = "codebloom-confetti";
     document.body.appendChild(canvas);
-    canvas.width = innerWidth; canvas.height = innerHeight;
-    addEventListener("resize", () => { canvas.width = innerWidth; canvas.height = innerHeight; });
+    canvas.width = innerWidth; 
+    canvas.height = innerHeight;
+    addEventListener("resize", () => { 
+      canvas.width = innerWidth; 
+      canvas.height = innerHeight; 
+    });
   }
   const ctx = canvas.getContext("2d");
   const pieces = Array.from({ length: 80 }, () => ({
@@ -51,18 +35,24 @@ function confetti() {
     r: Math.random() * Math.PI
   }));
   let t = 0;
-  (function frame() {
+  function frame() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     pieces.forEach(p => {
-      p.x += p.vx; p.y += p.vy; p.r += 0.05;
-      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r);
+      p.x += p.vx; 
+      p.y += p.vy; 
+      p.r += 0.05;
+      ctx.save();
+      ctx.translate(p.x, p.y); 
+      ctx.rotate(p.r);
       ctx.fillStyle = `hsl(${(t + p.x) % 360}, 80%, 60%)`;
       ctx.fillRect(-p.s/2, -p.s/2, p.s, p.s);
       ctx.restore();
     });
     t += 2;
-    if (t < 180) requestAnimationFrame(frame); else ctx.clearRect(0,0,canvas.width,canvas.height);
-  })();
+    if (t < 180) requestAnimationFrame(frame); 
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  frame();
 }
 
 // --- trigger once per accepted result ---
@@ -71,102 +61,67 @@ function celebrate() {
   const now = Date.now();
   if (now - lastAcceptedStamp < 3000) return; // debounce
   lastAcceptedStamp = now;
-  showToast("Accepted! Keep growing 🌿");
+  showToast("Good job 🌿");
   confetti();
 }
 
-// ----- success keywords (extend if needed) -----
-const SUCCESS_RE = /\bAccepted\b/i; // add more: /(Accepted|All test cases passed|通过)/i
-
-let submitInFlight = false;
-let domObserver = null;
-let guardTimer = null;
-
-// Take a baseline map: element -> its textContent at submit time
-function takeBaseline() {
-  const baseline = new WeakMap();
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT);
-  while (walker.nextNode()) {
-    const el = walker.currentNode;
-    const txt = el.textContent || "";
-    if (txt) baseline.set(el, txt);
-  }
-  return baseline;
-}
-
-// Arm a short-lived DOM watcher that fires only on NEW "Accepted"
-function armAcceptedWatcher() {
-  cleanupWatcher();
-  submitInFlight = true;
-
-  const baseline = takeBaseline();
-
-  domObserver = new MutationObserver((records) => {
-    if (!submitInFlight) return;
-    let hit = false;
-
-    for (const rec of records) {
-      // Added nodes
-      rec.addedNodes && rec.addedNodes.forEach(node => {
-        if (hit) return;
-        if (node.nodeType === 1) {
-          if (SUCCESS_RE.test(node.textContent || "")) hit = true;
-        } else if (node.nodeType === 3) {
-          if (SUCCESS_RE.test(node.nodeValue || "")) hit = true;
-        }
-      });
-      if (hit) break;
-
-      // Existing node changed from not-accepted -> accepted
-      const el = rec.target.nodeType === 3 ? rec.target.parentElement : rec.target;
-      if (el && el.nodeType === 1) {
-        const before = baseline.get(el) || "";
-        const now = el.textContent || "";
-        if (!SUCCESS_RE.test(before) && SUCCESS_RE.test(now)) {
-          hit = true;
-        }
-        baseline.set(el, now); // keep baseline in sync
-      }
-
-      if (hit) break;
-    }
-
-    if (hit) {
-      submitInFlight = false;
-      cleanupWatcher();
-      celebrate();
-    }
+// --- strategy 1: DOM-based verdict detection ---
+function startDomWatcher() {
+  const observer = new MutationObserver(() => {
+    // Look for any node whose text includes "Accepted" (robust to UI class changes)
+    const hit = [...document.querySelectorAll("body *")].some(el => {
+      const txt = el.textContent || "";
+      return /(^|\s)Accepted(\s|$)/i.test(txt);
+    });
+    if (hit) celebrate();
   });
-
-  domObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
-  // Stop after 20s if no verdict appears
-  guardTimer = setTimeout(() => { submitInFlight = false; cleanupWatcher(); }, 20000);
+  observer.observe(document.body, { childList: true, subtree: true });
 }
 
-function cleanupWatcher() {
-  if (domObserver) { try { domObserver.disconnect(); } catch {} domObserver = null; }
-  if (guardTimer) { clearTimeout(guardTimer); guardTimer = null; }
-}
-
-// Bind to any button whose text CONTAINS "submit" (handles icons/whitespace)
-function bindSubmitButtons() {
-  const tryBind = () => {
-    const btns = [...document.querySelectorAll('button, [role="button"]')];
-    const submitBtn = btns.find(
-      b => /submit/i.test((b.textContent || '').replace(/\s+/g, ' ').trim())
-    );
-    if (submitBtn && !submitBtn.__cbBound) {
-      submitBtn.__cbBound = true;
-      submitBtn.addEventListener('click', armAcceptedWatcher, { capture: true });
-    }
+// --- strategy 2: network-based detection (optional, sturdier) ---
+(function hookFetch() {
+  const orig = window.fetch;
+  window.fetch = async function(input, init) {
+    const res = await orig(input, init);
+    try {
+      const url = typeof input === "string" ? input : input.url;
+      if (url.includes("/graphql")) {
+        const cloned = res.clone();
+        const data = await cloned.json().catch(() => null);
+        const s = JSON.stringify(data);
+        // Heuristics: Accepted can appear as status "ACCEPTED" or display "Accepted"
+        if (/\"status\"\s*:\s*\"ACCEPTED\"/i.test(s) || /\"statusDisplay\"\s*:\s*\"Accepted\"/i.test(s)) {
+          celebrate();
+        }
+      }
+    } catch { /* ignore */ }
+    return res;
   };
-  tryBind();
-  new MutationObserver(tryBind).observe(document.body, { childList: true, subtree: true });
+})();
+
+// --- floating sidebar icon ---
+function injectSideIcon() {
+  let icon = document.getElementById("codebloom-sideicon");
+  if (!icon) {
+    icon = document.createElement("img");
+    icon.id = "codebloom-sideicon";
+    icon.src = chrome.runtime.getURL("icons/dog.png"); // resolve packaged icon path
+    document.body.appendChild(icon);
+
+    // Optional click handler
+    icon.addEventListener("click", () => {
+      showToast("🐶🐶🐶Good job!");
+    });
+  }
 }
 
-// Kick off (DOM-only approach)
+// --- kick off ---
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", bindSubmitButtons);
+  document.addEventListener("DOMContentLoaded", () => {
+    startDomWatcher();
+    injectSideIcon();
+  });
 } else {
-  bindSubmitButtons();
+  startDomWatcher();
+  injectSideIcon();
 }
