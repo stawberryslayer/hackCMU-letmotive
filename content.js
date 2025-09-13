@@ -167,7 +167,7 @@ async function showCelebrationPopup() {
     const dogImage = popup.querySelector('.sit-dog-image');
     
     nameInput.value = savedName;
-    dogImage.src = chrome.runtime.getURL("icons/dog.png");
+    dogImage.src = chrome.runtime.getURL("icons/sitdog.png");
 
     document.body.appendChild(popup);
 
