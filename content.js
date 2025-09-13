@@ -57,21 +57,33 @@ function celebrate() {
 }
 
 function startDomWatcher() {
+  // 1. Find the "Submit" button once it's in the DOM
   const observer = new MutationObserver(() => {
-    const candidates = document.querySelectorAll('button, [role="button"], a[role="button"]');
-    for (const el of candidates) {
-      const name = (
-        el.getAttribute('aria-label') ||
-        el.title ||
-        el.innerText ||
-        el.textContent ||
-        ''
-      ).replace(/\s+/g, ' ').trim();
+    const submitBtn = [...document.querySelectorAll('button, [role="button"], a[role="button"]')]
+      .find(el => /submit/i.test(
+        (el.getAttribute('aria-label') || el.title || el.innerText || el.textContent || '')
+          .replace(/\s+/g, ' ').trim()
+      ));
 
-      if (/^solution$/i.test(name)) {
-        celebrate();
-        return; // stop after the first match
-      }
+    if (submitBtn && !submitBtn.dataset._cbBound) {
+      submitBtn.dataset._cbBound = "1";
+
+      // 2. Attach click listener to "Submit"
+      submitBtn.addEventListener("click", () => {
+        // 3. After clicking, watch for "Solution" button
+        const solObserver = new MutationObserver(() => {
+          const solutionBtn = [...document.querySelectorAll('button, [role="button"], a[role="button"]')]
+            .find(el => /^solution$/i.test(
+              (el.getAttribute('aria-label') || el.title || el.innerText || el.textContent || '')
+                .replace(/\s+/g, ' ').trim()
+            ));
+          if (solutionBtn) {
+            solObserver.disconnect(); // stop once found
+            celebrate();
+          }
+        });
+        solObserver.observe(document.body, { childList: true, subtree: true });
+      });
     }
   });
 
