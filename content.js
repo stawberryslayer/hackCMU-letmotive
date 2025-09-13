@@ -268,14 +268,12 @@ async function celebrate() {
   
   showToast(difficultyMessages[difficulty]);
 
-  // Run food drop + confetti at the same time
+  // Show popup window and run animations simultaneously
   await Promise.all([
     dropTreats(celebration.treats, celebration.treatOptions),
-    confettiBottom(celebration.confettiOptions)
+    confettiBottom(celebration.confettiOptions),
+    showCelebrationPopup() // Now runs at the same time
   ]);
-
-  // Then show popup window
-  showCelebrationPopup();
 }
 
 function startDomWatcher() {
