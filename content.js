@@ -614,7 +614,7 @@ function createGifElement(icon) {
   gif.id = "codebloom-sideicon-gif";
   if (getTotalScore() > 10) {
     gif.src = chrome.runtime.getURL("icons/drunk.gif");
-  } else if (is_happy) {
+  } else if (getTotalScore() >= 5) {
     gif.src = chrome.runtime.getURL("icons/happydog.gif");
   }  else {
     gif.src = chrome.runtime.getURL("icons/saddog.gif");
